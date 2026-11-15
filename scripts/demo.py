@@ -44,6 +44,23 @@ def main():
             loaded = call("http://127.0.0.1:8766/analyses/" + record["id"])
             if loaded != record:
                 raise RuntimeError("保存的分析与返回值不一致")
+            evolution = call("http://127.0.0.1:8766/analyses", {
+                "request_key": "local-topic-evolution", "release": "term-a",
+                "analysis": "topic_evolution",
+                "parameters": {"model": {"n_topics": 3},
+                               "alternatives": [{"name": "nmf-3",
+                                                 "model": {"type": "nmf", "n_topics": 3}}]},
+            })
+            result = evolution["result"]
+            print("主题演化事件：")
+            for edge in result["transitions"]:
+                print(f"  {edge['transition']} {edge['status']} {edge['confidence_level']}")
+            print("备选建模比较：")
+            for comparison in result["alternative_comparisons"]:
+                print(f"  {comparison['label']} ARI={comparison['mean_assignment_ari']} "
+                      f"事件一致率={comparison['event_status_agreement']}")
+            if call("http://127.0.0.1:8766/analyses/" + evolution["id"]) != evolution:
+                raise RuntimeError("保存的主题演化与返回值不一致")
             print(f"本地分析完成，用时 {time.monotonic() - started:.2f} 秒")
         finally:
             for process in processes:

@@ -104,6 +104,26 @@ class PlatformTests(unittest.TestCase):
             self.request("/analyses", {"request_key": "unknown", "release": "term-a", "analysis": "not-registered"})
         self.assertEqual(raised.exception.code, 422)
 
+    def test_topic_evolution_save_and_retrieve(self):
+        request = {"request_key": "topic-evolution", "release": "term-a",
+                   "analysis": "topic_evolution",
+                   "parameters": {"model": {"n_topics": 3}}}
+        status, record = self.request("/analyses", request)
+        self.assertEqual(status, 201)
+        self.assertEqual(record, self.request("/analyses/" + record["id"])[1])
+        result = record["result"]
+        self.assertEqual(result["schema_version"], 1)
+        self.assertEqual(len(result["term_models"]), 4)
+        self.assertTrue(result["transitions"])
+        self.assertTrue(result["trajectories"])
+
+    def test_topic_evolution_invalid_parameters_are_422(self):
+        request = {"request_key": "topic-evolution-bad", "release": "term-a",
+                   "analysis": "topic_evolution", "parameters": {"weighting": "mystery"}}
+        with self.assertRaises(HTTPError) as raised:
+            self.request("/analyses", request)
+        self.assertEqual(raised.exception.code, 422)
+
     def test_missing_release(self):
         with self.assertRaises(ValueError):
             SourceClient(self.source_url).load("missing")

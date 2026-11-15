@@ -1,9 +1,7 @@
 from collections import Counter, defaultdict
-import math
 
-import numpy as np
-
-from learning.codec import numeric, require_fields, unique
+from learning.codec import require_fields, unique
+from learning.topics import topic_evolution
 
 PRODUCT = '课程意见研读'
 KEYS = {'feedback': ['document'], 'terminology': ['document', 'original', 'applies_from']}
@@ -33,4 +31,4 @@ def overview(tables, parameters):
             "people": len({row["person"] for row in tables["feedback"]})}
 
 
-ANALYSES = {"overview": overview}
+ANALYSES = {"overview": overview, "topic_evolution": topic_evolution}
